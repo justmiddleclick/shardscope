@@ -267,3 +267,36 @@ tbody tr:hover { background: rgba(74, 163, 255, .045); }
 .hunting-shard strong {
   color: #ffffff;
 }
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-left: 6px;
+}
+
+.badge-location {
+  background: #1d4ed8;
+  color: white;
+}
+
+.badge-tool {
+  background: #0f766e;
+  color: white;
+}
+
+.badge-easy {
+  background: #15803d;
+  color: white;
+}
+
+.badge-medium {
+  background: #ca8a04;
+  color: white;
+}
+
+.badge-hard {
+  background: #b91c1c;
+  color: white;
+}

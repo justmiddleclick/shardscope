@@ -208,34 +208,40 @@ function renderHuntingShards() {
         : "Price unavailable";
 
       return `
-        <article class="hunting-shard">
-          <h3>${escapeHtml(shard.name)}</h3>
+  <article class="hunting-shard">
+    <h3>${escapeHtml(shard.name)}</h3>
 
-          <p>
-            <strong>Current Bazaar value:</strong>
-            ${currentValue}
-          </p>
+    <p>
+      <strong>Current Bazaar value:</strong>
+      ${currentValue}
+    </p>
 
-          <p>
-            <strong>Location:</strong>
-            ${escapeHtml(shard.hunting.location)}
-          </p>
+    <p>
+      <strong>Location:</strong>
+      <span class="badge badge-location">
+        ${escapeHtml(shard.hunting.location)}
+      </span>
+    </p>
 
-          <p>
-            <strong>Method:</strong>
-            ${escapeHtml(shard.hunting.method)}
-          </p>
+    <p>
+      <strong>Method:</strong>
+      ${escapeHtml(shard.hunting.method)}
+    </p>
 
-          <p>
-            <strong>Tool:</strong>
-            ${escapeHtml(shard.hunting.tool)}
-          </p>
+    <p>
+      <strong>Tool:</strong>
+      <span class="badge badge-tool">
+        ${escapeHtml(shard.hunting.tool)}
+      </span>
+    </p>
 
-          <p>
-            <strong>Difficulty:</strong>
-            ${escapeHtml(shard.hunting.difficulty)}
-          </p>
-        </article>
+    <p>
+      <strong>Difficulty:</strong>
+      <span class="badge badge-${shard.hunting.difficulty.toLowerCase()}">
+        ${escapeHtml(shard.hunting.difficulty)}
+      </span>
+    </p>
+  </article>
       `;
     })
     .join("");
