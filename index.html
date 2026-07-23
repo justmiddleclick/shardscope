@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Live Hypixel SkyBlock shard Bazaar rankings and flip calculator.">
+  <title>ShardScope — Hypixel SkyBlock Shard Profits</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <p class="eyebrow">HYPIXEL SKYBLOCK TOOL</p>
+      <h1>ShardScope</h1>
+      <p class="subtitle">Find the highest-value shards and the best Bazaar spreads using live prices.</p>
+      <div class="status-row">
+        <span id="status" class="status">Loading Bazaar data…</span>
+        <span id="updated" class="updated"></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="controls card" aria-label="Filters">
+      <label>
+        Search
+        <input id="search" type="search" placeholder="Daemon, Hideonring…">
+      </label>
+
+      <label>
+        Sort by
+        <select id="sort">
+          <option value="instantBuy">Highest instant-buy price</option>
+          <option value="instantSell">Highest instant-sell price</option>
+          <option value="spreadCoins">Largest spread</option>
+          <option value="spreadPercent">Largest spread %</option>
+          <option value="sellVolume">Highest sell volume</option>
+          <option value="buyVolume">Highest buy volume</option>
+        </select>
+      </label>
+
+      <label>
+        Minimum daily volume
+        <input id="minVolume" type="number" min="0" step="1" value="0">
+      </label>
+
+      <label>
+        Bazaar tax %
+        <input id="tax" type="number" min="0" max="10" step="0.1" value="1.25">
+      </label>
+
+      <button id="refresh" type="button">Refresh prices</button>
+    </section>
+
+    <section class="summary-grid" aria-label="Summary">
+      <article class="card metric">
+        <span>Tracked shards</span>
+        <strong id="tracked">—</strong>
+      </article>
+      <article class="card metric">
+        <span>Highest instant sell</span>
+        <strong id="highestSell">—</strong>
+      </article>
+      <article class="card metric">
+        <span>Best listed spread</span>
+        <strong id="bestSpread">—</strong>
+      </article>
+    </section>
+
+    <section class="card table-card">
+      <div class="table-heading">
+        <div>
+          <h2>Current shard rankings</h2>
+          <p>Buy orders are what you instant-sell into. Sell offers are what you instant-buy from.</p>
+        </div>
+        <span id="resultCount"></span>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Shard</th>
+              <th>Instant buy</th>
+              <th>Instant sell</th>
+              <th>Spread</th>
+              <th>After-tax spread</th>
+              <th>Buy volume</th>
+              <th>Sell volume</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+
+      <div id="empty" class="empty hidden">No shards match your filters.</div>
+    </section>
+
+    <section class="card notes">
+      <h2>How to read this</h2>
+      <p><strong>Instant buy</strong> is the cheapest current sell offer. <strong>Instant sell</strong> is the highest current buy order. The after-tax spread estimates a simple buy-order → sell-offer flip after your selected Bazaar tax.</p>
+      <p class="small">Price data comes from Hypixel's public Bazaar endpoint. This project is not affiliated with Hypixel.</p>
+    </section>
+  </main>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
