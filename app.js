@@ -17,7 +17,8 @@ const els = {
   resultCount: document.querySelector("#resultCount"),
   rows: document.querySelector("#rows"),
   empty: document.querySelector("#empty"),
-  huntingShards: document.querySelector("#huntingShards")
+  huntingShards: document.querySelector("#huntingShards"),
+  shardDetailsSection: document.querySelector("#shardDetailsSection")
 };
 
 const money = new Intl.NumberFormat("en-US", {
@@ -170,6 +171,7 @@ function renderHuntingShards() {
 
 if (!searchTerm) {
   els.huntingShards.innerHTML = "";
+  els.shardDetailsSection.hidden = true;
   return;
 }
 
@@ -269,5 +271,9 @@ ${recipeHtml}
       `;
     })
     .join("");
+
+  els.shardDetailsSection.hidden =
+    els.huntingShards.innerHTML.trim() === "";
 }
+
 loadData();
