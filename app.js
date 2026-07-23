@@ -16,7 +16,8 @@ const els = {
   bestSpread: document.querySelector("#bestSpread"),
   resultCount: document.querySelector("#resultCount"),
   rows: document.querySelector("#rows"),
-  empty: document.querySelector("#empty")
+  empty: document.querySelector("#empty"),
+  huntingShards: document.querySelector("#huntingShards")
 };
 
 const money = new Intl.NumberFormat("en-US", {
@@ -170,6 +171,7 @@ function render() {
         <td>${integer.format(shard.sellVolume)}</td>
       </tr>`;
   }).join("");
+    renderHuntingShards();
 }
 
 function escapeHtml(value) {
@@ -189,4 +191,53 @@ function escapeHtml(value) {
 });
 
 els.refresh.addEventListener("click", loadData);
+function renderHuntingShards() {
+  if (!els.huntingShards || !Array.isArray(shardData)) {
+    return;
+  }
+
+  els.huntingShards.innerHTML = shardData
+    .filter(shard => shard.hunting?.huntable)
+    .map(shard => {
+      const product = state.shards.find(
+        bazaarShard => bazaarShard.id === shard.bazaarId
+      );
+
+      const currentValue = product
+        ? formatCoins(product.instantSell)
+        : "Price unavailable";
+
+      return `
+        <article class="hunting-shard">
+          <h3>${escapeHtml(shard.name)}</h3>
+
+          <p>
+            <strong>Current Bazaar value:</strong>
+            ${currentValue}
+          </p>
+
+          <p>
+            <strong>Location:</strong>
+            ${escapeHtml(shard.hunting.location)}
+          </p>
+
+          <p>
+            <strong>Method:</strong>
+            ${escapeHtml(shard.hunting.method)}
+          </p>
+
+          <p>
+            <strong>Tool:</strong>
+            ${escapeHtml(shard.hunting.tool)}
+          </p>
+
+          <p>
+            <strong>Difficulty:</strong>
+            ${escapeHtml(shard.hunting.difficulty)}
+          </p>
+        </article>
+      `;
+    })
+    .join("");
+}
 loadData();

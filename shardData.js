@@ -1,29 +1,21 @@
 const shardData = [
-  /*
-  Each shard will eventually look like this:
-
   {
-    name: "Shard Name",
-    bazaarId: "SHARD_PRODUCT_ID",
+    name: "Hideonleaf",
+    bazaarId: "SHARD_HIDEONLEAF",
 
     hunting: {
       huntable: true,
-      location: "Location",
-      method: "How it is hunted",
-      tool: "Required tool",
+      location: "Galatea",
+      method:
+        "Wake the Hideonleaf, then reflect its projectile back until it is defeated.",
+      tool: "Fishing Net",
       difficulty: "Easy",
-      estimatedPerHour: 0
+      estimatedPerHour: null
     },
 
     fusion: {
-      canBeCreatedByFusion: true,
-      ingredients: [
-        {
-          bazaarId: "SHARD_INGREDIENT",
-          amount: 1
-        }
-      ]
+      canBeCreatedByFusion: false,
+      ingredients: []
     }
   }
-  */
 ];

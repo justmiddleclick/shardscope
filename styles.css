@@ -233,3 +233,37 @@ tbody tr:hover { background: rgba(74, 163, 255, .045); }
   .controls, .summary-grid { grid-template-columns: 1fr; }
   .table-heading { align-items: start; flex-direction: column; }
 }
+/* Hunting Cards */
+
+.hunting-card {
+  margin-top: 20px;
+}
+
+.hunting-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  padding: 20px;
+}
+
+.hunting-shard {
+  background: #162338;
+  border: 1px solid #243652;
+  border-radius: 12px;
+  padding: 18px;
+}
+
+.hunting-shard h3 {
+  margin: 0 0 12px;
+  color: #ffffff;
+}
+
+.hunting-shard p {
+  margin: 8px 0;
+  color: #c7d2e4;
+  line-height: 1.5;
+}
+
+.hunting-shard strong {
+  color: #ffffff;
+}
