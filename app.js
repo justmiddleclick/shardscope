@@ -977,7 +977,85 @@ function renderUsedInSection(shard) {
     </section>
   `;
 }
+/*
+  Render one ingredient as a lightweight summary.
 
+  This intentionally does not recursively render all of the
+  ingredient's own fusion recipes.
+*/
+function renderIngredientSummary(ingredient) {
+  const amount = Number(ingredient.amount) || 1;
+
+  if (ingredient.type === "shard") {
+    const ingredientShard = getShardById(ingredient.shardId);
+
+    const ingredientName = ingredientShard
+      ? ingredientShard.name
+      : titleFromProductId(ingredient.shardId);
+
+    return `
+      <li class="fusion-ingredient-summary">
+        <strong>
+          ${integer.format(amount)} ×
+          ${escapeHtml(ingredientName)}
+        </strong>
+
+        ${
+          ingredientShard
+            ? renderAcquisitionBadges(ingredientShard)
+            : `
+              <span class="acquisition-badge acquisition-unresolved">
+                Missing data
+              </span>
+            `
+        }
+      </li>
+    `;
+  }
+
+  if (ingredient.type === "family") {
+    return `
+      <li class="fusion-ingredient-summary">
+        <strong>
+          ${integer.format(amount)} ×
+          Any ${escapeHtml(ingredient.family)}-family shard
+        </strong>
+      </li>
+    `;
+  }
+
+  if (ingredient.type === "rarity") {
+    return `
+      <li class="fusion-ingredient-summary">
+        <strong>
+          ${integer.format(amount)} ×
+          Any ${escapeHtml(
+            String(ingredient.rarity).toUpperCase()
+          )} shard
+        </strong>
+      </li>
+    `;
+  }
+
+  if (ingredient.type === "group") {
+    return `
+      <li class="fusion-ingredient-summary">
+        <strong>
+          ${integer.format(amount)} ×
+          ${escapeHtml(
+            ingredient.label || "Eligible shard"
+          )}
+        </strong>
+      </li>
+    `;
+  }
+
+  return `
+    <li class="fusion-ingredient-summary">
+      Unknown ingredient
+    </li>
+  `;
+}
 /*
   Render all possible known acquisition paths for the searched target.
 */
@@ -998,11 +1076,10 @@ function renderTargetFusionSection(shard) {
     <section class="detail-section fusion-tree-section">
       <div class="fusion-tree-title">
         <div>
-          <h4>All Known Fusion Paths</h4>
+          <h4>Known Fusion Recipes</h4>
 
           <p>
-            Expand each branch to follow the recipe until it reaches
-            directly huntable shards.
+            Open a recipe to view its direct ingredients.
           </p>
         </div>
 
@@ -1017,10 +1094,7 @@ function renderTargetFusionSection(shard) {
       </div>
 
       <div class="fusion-tree">
-        ${renderFusionRecipesForTree(
-          shard,
-          [shard.id]
-        )}
+        ${renderDirectFusionRecipes(shard)}
       </div>
     </section>
   `;
@@ -1047,15 +1121,24 @@ function renderHuntingShards() {
     return;
   }
 
-  const matchingShards = shardData.filter(shard => {
-    const nameMatches =
-      shard.name.toLowerCase().includes(searchTerm);
+  /*
+  Only open the expensive detail section when the user enters
+  an exact shard name or permanent ID.
 
-    const idMatches =
-      shard.id.toLowerCase().includes(searchTerm);
+  Partial searches will still work in the Bazaar results table.
+*/
+const matchingShards = shardData.filter(shard => {
+  const normalizedName =
+    shard.name.trim().toLowerCase();
 
-    return nameMatches || idMatches;
-  });
+  const normalizedId =
+    shard.id.trim().toLowerCase();
+
+  return (
+    normalizedName === searchTerm ||
+    normalizedId === searchTerm
+  );
+});
 
   els.huntingShards.innerHTML = matchingShards
     .map(shard => {
