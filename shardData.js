@@ -17,8 +17,8 @@ const shardData = [
       canBeCreatedByFusion: false,
       ingredients: [],
       usedIn: [
-        // "SHARD_MOLTHORN"
-      ]
+  "SHARD_HIDEON_GIFT"
+]
     }
   }
 ];
