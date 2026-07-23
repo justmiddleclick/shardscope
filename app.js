@@ -197,6 +197,44 @@ function shardHasFusionRecipes(shard) {
 }
 
 /*
+  Compare classification values without worrying about capitalization.
+*/
+function classificationMatches(value, requiredValue) {
+  if (!value || !requiredValue) {
+    return false;
+  }
+
+  return (
+    String(value).trim().toLowerCase() ===
+    String(requiredValue).trim().toLowerCase()
+  );
+}
+
+/*
+  Return every shard belonging to a particular family.
+*/
+function getShardsByFamily(family) {
+  return shardData.filter(shard =>
+    classificationMatches(
+      shard.classification && shard.classification.family,
+      family
+    )
+  );
+}
+
+/*
+  Return every shard with a particular rarity.
+*/
+function getShardsByRarity(rarity) {
+  return shardData.filter(shard =>
+    classificationMatches(
+      shard.classification && shard.classification.rarity,
+      rarity
+    )
+  );
+}
+
+/*
   Create the small Huntable, Fusion, or Unresolved status badges
   displayed beside shards inside the fusion tree.
 */
@@ -475,7 +513,93 @@ function renderGroupIngredientNode(
     </details>
   `;
 }
+/*
+  Render a family-based or rarity-based ingredient.
 
+  The list of eligible shards is generated automatically from
+  each shard's classification information.
+*/
+function renderClassificationIngredientNode(
+  ingredient,
+  currentPath
+) {
+  let matchingShards = [];
+  let label = "Eligible shards";
+  let classificationDescription = "";
+
+  if (ingredient.type === "family") {
+    matchingShards = getShardsByFamily(ingredient.family);
+
+    label = `Any ${ingredient.family}-family shard`;
+
+    classificationDescription =
+      `family: "${ingredient.family}"`;
+  }
+
+  if (ingredient.type === "rarity") {
+    matchingShards = getShardsByRarity(ingredient.rarity);
+
+    label = `Any ${String(ingredient.rarity).toUpperCase()} shard`;
+
+    classificationDescription =
+      `rarity: "${String(ingredient.rarity).toUpperCase()}"`;
+  }
+
+  /*
+    Sort the automatically generated choices alphabetically.
+  */
+  matchingShards.sort((a, b) =>
+    a.name.localeCompare(b.name)
+  );
+
+  const matchingShardHtml = matchingShards.length
+    ? matchingShards
+        .map(shard =>
+          renderShardIngredientNode(
+            shard.id,
+            ingredient.amount,
+            currentPath
+          )
+        )
+        .join("")
+    : `
+      <div class="fusion-group-empty">
+        <p>
+          No eligible shards were found for this category.
+        </p>
+
+        <p>
+          Add shards to shardData.js with
+          <code>${escapeHtml(classificationDescription)}</code>
+          inside their classification object.
+        </p>
+      </div>
+    `;
+
+  return `
+    <details class="fusion-group-node" open>
+      <summary>
+        <span>
+          ${integer.format(ingredient.amount)} ×
+          ${escapeHtml(label)}
+        </span>
+
+        <span class="fusion-choice-label">
+          ${integer.format(matchingShards.length)}
+          ${
+            matchingShards.length === 1
+              ? "eligible shard"
+              : "eligible shards"
+          }
+        </span>
+      </summary>
+
+      <div class="fusion-group-options">
+        ${matchingShardHtml}
+      </div>
+    </details>
+  `;
+}
 /*
   Decide which renderer should handle one recipe ingredient.
 */
@@ -491,8 +615,32 @@ function renderFusionIngredient(
     );
   }
 
+  /*
+    Keep support for manually entered groups in case a recipe
+    has unusual choices that cannot be generated from classification.
+  */
   if (ingredient.type === "group") {
     return renderGroupIngredientNode(
+      ingredient,
+      currentPath
+    );
+  }
+
+  /*
+    Automatically generate all shards in a family.
+  */
+  if (ingredient.type === "family") {
+    return renderClassificationIngredientNode(
+      ingredient,
+      currentPath
+    );
+  }
+
+  /*
+    Automatically generate all shards of a rarity.
+  */
+  if (ingredient.type === "rarity") {
+    return renderClassificationIngredientNode(
       ingredient,
       currentPath
     );

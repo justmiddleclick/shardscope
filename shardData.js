@@ -5,9 +5,9 @@ const shardData = [
     bazaarId: "SHARD_HIDEONLEAF",
 
     classification: {
-      family: "Shulker",
-      rarity: null
-    },
+  family: "Shulker",
+  rarity: "COMMON"
+},
 
     hunting: {
       huntable: true,
@@ -51,24 +51,18 @@ const shardData = [
           outputAmount: 2,
 
           ingredients: [
-            {
-              type: "group",
-              label: "Any Shulker-family shard",
-              amount: 5,
+  {
+    type: "family",
+    family: "Shulker",
+    amount: 5
+  },
 
-              options: [
-                "SHARD_HIDEONLEAF"
-              ]
-            },
-
-            {
-              type: "group",
-              label: "Any COMMON shard",
-              amount: 5,
-
-              options: []
-            }
-          ]
+  {
+    type: "rarity",
+    rarity: "COMMON",
+    amount: 5
+  }
+]
         }
       ]
     }
