@@ -163,117 +163,210 @@ function escapeHtml(value) {
 
 els.refresh.addEventListener("click", loadData);
 function renderHuntingShards() {
-  if (!els.huntingShards || !Array.isArray(shardData)) {
+  if (
+    !els.huntingShards ||
+    !els.shardDetailsSection ||
+    !Array.isArray(shardData)
+  ) {
     return;
   }
 
   const searchTerm = els.search.value.trim().toLowerCase();
 
-if (!searchTerm) {
-  els.huntingShards.innerHTML = "";
-  els.shardDetailsSection.hidden = true;
-  return;
-}
+  if (!searchTerm) {
+    els.huntingShards.innerHTML = "";
+    els.shardDetailsSection.hidden = true;
+    return;
+  }
 
-els.huntingShards.innerHTML = shardData
-  .filter(shard =>
+  const matchingShards = shardData.filter(shard =>
     shard.name.toLowerCase().includes(searchTerm)
-  )
+  );
+
+  els.huntingShards.innerHTML = matchingShards
     .map(shard => {
       const product = state.shards.find(
         bazaarShard => bazaarShard.id === shard.bazaarId
       );
 
-      const currentValue = product
-        ? formatCoins(product.instantSell)
-        : "Price unavailable";
-        const recipeHtml = shard.fusion.canBeCreatedByFusion
-  ? `
-    <div class="fusion-recipe">
-      <p><strong>Fusion Recipe:</strong></p>
-      <ul>
-        ${shard.fusion.ingredients
-          .map(ingredient => `
-            <li>
-              ${integer.format(ingredient.amount)} ×
-              ${escapeHtml(ingredient.requirement)}
-            </li>
-          `)
-          .join("")}
-      </ul>
+      const taxRate = Number(els.tax.value) / 100;
 
-      <p>
-        <strong>Produces:</strong>
-        ${integer.format(shard.fusion.outputAmount)} × ${escapeHtml(shard.name)}
-      </p>
-    </div>
-  `
-  : "";
-  const huntingHtml = shard.hunting.huntable
-  ? `
-    <p>
-      <strong>Location:</strong>
-      <span class="badge badge-location">
-        ${escapeHtml(shard.hunting.location)}
-      </span>
-    </p>
+      const spreadCoins = product
+        ? product.instantBuy - product.instantSell
+        : null;
 
-    <p>
-      <strong>Method:</strong>
-      ${escapeHtml(shard.hunting.method)}
-    </p>
+      const spreadPercent =
+        product && product.instantBuy > 0
+          ? (spreadCoins / product.instantBuy) * 100
+          : null;
 
-    <p>
-      <strong>Tool:</strong>
-      <span class="badge badge-tool">
-        ${escapeHtml(shard.hunting.tool)}
-      </span>
-    </p>
+      const afterTaxSpread = product
+        ? product.instantBuy * (1 - taxRate) - product.instantSell
+        : null;
 
-    <p>
-      <strong>Difficulty:</strong>
-      <span class="badge badge-${shard.hunting.difficulty.toLowerCase()}">
-        ${escapeHtml(shard.hunting.difficulty)}
-      </span>
-    </p>
-  `
-  : `
-    <p><strong>Hunting:</strong> Cannot be hunted directly</p>
-  `;
+      const spreadClass =
+        spreadCoins !== null && spreadCoins > 0
+          ? "positive"
+          : "negative";
+
+      const afterTaxClass =
+        afterTaxSpread !== null && afterTaxSpread > 0
+          ? "positive"
+          : "negative";
+
+      const bazaarHtml = product
+        ? `
+          <section class="detail-section">
+            <h4>Bazaar</h4>
+
+            <div class="bazaar-detail-grid">
+              <div class="bazaar-detail">
+                <span>Instant Buy</span>
+                <strong>${formatCoins(product.instantBuy)}</strong>
+              </div>
+
+              <div class="bazaar-detail">
+                <span>Instant Sell</span>
+                <strong>${formatCoins(product.instantSell)}</strong>
+              </div>
+
+              <div class="bazaar-detail">
+                <span>Spread</span>
+                <strong class="${spreadClass}">
+                  ${formatCoins(spreadCoins)}
+                  ${
+                    spreadPercent !== null
+                      ? `(${spreadPercent.toFixed(2)}%)`
+                      : ""
+                  }
+                </strong>
+              </div>
+
+              <div class="bazaar-detail">
+                <span>After-Tax Spread</span>
+                <strong class="${afterTaxClass}">
+                  ${formatCoins(afterTaxSpread)}
+                </strong>
+              </div>
+
+              <div class="bazaar-detail">
+                <span>Buy Volume</span>
+                <strong>${integer.format(product.buyVolume)}</strong>
+              </div>
+
+              <div class="bazaar-detail">
+                <span>Sell Volume</span>
+                <strong>${integer.format(product.sellVolume)}</strong>
+              </div>
+            </div>
+          </section>
+        `
+        : `
+          <section class="detail-section">
+            <h4>Bazaar</h4>
+            <p>Price information is unavailable.</p>
+          </section>
+        `;
+
+      const huntingHtml = shard.hunting.huntable
+        ? `
+          <section class="detail-section">
+            <h4>Hunting</h4>
+
+            <p>
+              <strong>Location:</strong>
+              <span class="badge badge-location">
+                ${escapeHtml(shard.hunting.location)}
+              </span>
+            </p>
+
+            <p>
+              <strong>Method:</strong>
+              ${escapeHtml(shard.hunting.method)}
+            </p>
+
+            <p>
+              <strong>Tool:</strong>
+              <span class="badge badge-tool">
+                ${escapeHtml(shard.hunting.tool)}
+              </span>
+            </p>
+
+            <p>
+              <strong>Difficulty:</strong>
+              <span class="badge badge-${shard.hunting.difficulty.toLowerCase()}">
+                ${escapeHtml(shard.hunting.difficulty)}
+              </span>
+            </p>
+          </section>
+        `
+        : `
+          <section class="detail-section">
+            <h4>Hunting</h4>
+            <p>Cannot be hunted directly.</p>
+          </section>
+        `;
+
+      const usedInHtml = `
+        <section class="detail-section">
+          <h4>Used in Fusions</h4>
+
+          <ul>
+            ${
+              shard.fusion.usedIn.length
+                ? shard.fusion.usedIn
+                    .map(
+                      id =>
+                        `<li>${escapeHtml(titleFromProductId(id))}</li>`
+                    )
+                    .join("")
+                : "<li>None yet</li>"
+            }
+          </ul>
+        </section>
+      `;
+
+      const recipeHtml = shard.fusion.canBeCreatedByFusion
+        ? `
+          <section class="detail-section fusion-recipe">
+            <h4>Fusion Recipe</h4>
+
+            <ul>
+              ${shard.fusion.ingredients
+                .map(
+                  ingredient => `
+                    <li>
+                      ${integer.format(ingredient.amount)} ×
+                      ${escapeHtml(ingredient.requirement)}
+                    </li>
+                  `
+                )
+                .join("")}
+            </ul>
+
+            <p>
+              <strong>Produces:</strong>
+              ${integer.format(shard.fusion.outputAmount)} ×
+              ${escapeHtml(shard.name)}
+            </p>
+          </section>
+        `
+        : "";
 
       return `
-  <article class="hunting-shard">
-    <h3>${escapeHtml(shard.name)}</h3>
+        <article class="hunting-shard">
+          <h3>${escapeHtml(shard.name)}</h3>
 
-    <p>
-      <strong>Current Bazaar value:</strong>
-      ${currentValue}
-    </p>
-
-    ${huntingHtml}
-    <p>
-  <strong>Used in Fusions:</strong>
-</p>
-
-<ul>
-  ${
-    shard.fusion.usedIn.length
-      ? shard.fusion.usedIn
-          .map(id => `<li>${escapeHtml(titleFromProductId(id))}</li>`)
-          .join("")
-      : "<li>None yet</li>"
-  }
-</ul>
-
-${recipeHtml}
-
-</article>
+          ${bazaarHtml}
+          ${huntingHtml}
+          ${usedInHtml}
+          ${recipeHtml}
+        </article>
       `;
     })
     .join("");
 
-  els.shardDetailsSection.hidden =
-    els.huntingShards.innerHTML.trim() === "";
+  els.shardDetailsSection.hidden = matchingShards.length === 0;
 }
 
 loadData();

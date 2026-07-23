@@ -300,3 +300,51 @@ tbody tr:hover { background: rgba(74, 163, 255, .045); }
   background: #b91c1c;
   color: white;
 }
+.detail-section {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.detail-section h4 {
+  margin: 0 0 12px;
+  font-size: 1rem;
+}
+
+.bazaar-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.bazaar-detail {
+  padding: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.35);
+}
+
+.bazaar-detail span {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 0.8rem;
+  color: #93c5fd;
+}
+
+.bazaar-detail strong {
+  display: block;
+}
+
+.bazaar-detail .positive {
+  color: #4ade80;
+}
+
+.bazaar-detail .negative {
+  color: #fb7185;
+}
+
+@media (max-width: 800px) {
+  .bazaar-detail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
