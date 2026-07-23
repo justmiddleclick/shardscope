@@ -137,8 +137,8 @@ function render() {
         <td>${formatCoins(shard.instantSell)}</td>
         <td>${formatCoins(shard.spreadCoins)} (${shard.spreadPercent.toFixed(2)}%)</td>
         <td class="${spreadClass}">${formatCoins(afterTaxSpread)}</td>
-        <td>${integer.format(shard.buyVolume)}</td>
-        <td>${integer.format(shard.sellVolume)}</td>
+     <td>${integer.format(shard.buyVolume)}</td>
+<td>${integer.format(shard.sellVolume)}</td>
       </tr>`;
   }).join("");
     renderHuntingShards();
@@ -167,7 +167,9 @@ function renderHuntingShards() {
   }
 
   els.huntingShards.innerHTML = shardData
-    .filter(() => true)
+    .filter(shard =>
+  shard.name.toLowerCase().includes(els.search.value.trim().toLowerCase())
+)
     .map(shard => {
       const product = state.shards.find(
         bazaarShard => bazaarShard.id === shard.bazaarId
