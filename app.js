@@ -1057,6 +1057,92 @@ function renderIngredientSummary(ingredient) {
   `;
 }
 /*
+  Render only the target shard's direct recipes.
+
+  This prevents the browser from constructing the entire recursive
+  fusion network during a search.
+*/
+function renderDirectFusionRecipes(shard) {
+  const recipes = Array.isArray(shard.fusion?.recipes)
+    ? shard.fusion.recipes
+    : [];
+
+  const visibleRecipeLimit = 50;
+  const visibleRecipes = recipes.slice(0, visibleRecipeLimit);
+
+  const recipeHtml = visibleRecipes
+    .map((recipe, recipeIndex) => {
+      const ingredients = Array.isArray(recipe.ingredients)
+        ? recipe.ingredients
+        : [];
+
+      const ingredientsHtml = ingredients.length
+        ? ingredients
+            .map(renderIngredientSummary)
+            .join("")
+        : `
+          <li class="fusion-tree-warning">
+            This recipe has no ingredients.
+          </li>
+        `;
+
+      return `
+        <details class="fusion-path">
+          <summary class="fusion-path-heading">
+            <div>
+              <span class="fusion-path-label">
+                Recipe ${recipeIndex + 1}
+              </span>
+
+              <h5>
+                ${escapeHtml(
+                  recipe.name ||
+                  `Fusion Recipe ${recipeIndex + 1}`
+                )}
+              </h5>
+            </div>
+
+            <div class="fusion-output">
+              Produces
+              <strong>
+                ${integer.format(recipe.outputAmount || 1)} ×
+                ${escapeHtml(shard.name)}
+              </strong>
+            </div>
+          </summary>
+
+          <ul class="fusion-path-ingredients">
+            ${ingredientsHtml}
+          </ul>
+        </details>
+      `;
+    })
+    .join("");
+
+  const remainingCount =
+    recipes.length - visibleRecipes.length;
+
+  const limitMessage =
+    remainingCount > 0
+      ? `
+        <p class="fusion-tree-warning">
+          Showing the first
+          ${integer.format(visibleRecipeLimit)}
+          recipes.
+
+          ${integer.format(remainingCount)}
+          additional recipes are hidden to prevent the browser
+          from running out of memory.
+        </p>
+      `
+      : "";
+
+  return `
+    ${recipeHtml}
+    ${limitMessage}
+  `;
+}
+/*
   Render all possible known acquisition paths for the searched target.
 */
 function renderTargetFusionSection(shard) {
