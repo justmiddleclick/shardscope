@@ -78,7 +78,10 @@ async function loadData() {
   els.status.textContent = "Loading Bazaar data…";
 
   try {
-    const response = await fetch("/api/bazaar", { cache: "no-store" });
+    const response = await fetch(
+  "https://api.hypixel.net/v2/skyblock/bazaar",
+  { cache: "no-store" }
+);
     if (!response.ok) {
       const detail = await response.text();
       throw new Error(`Request failed (${response.status}): ${detail.slice(0, 120)}`);
