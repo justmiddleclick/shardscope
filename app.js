@@ -42,7 +42,7 @@ async function loadData() {
 
   try {
     const response = await fetch(
-  "https://api.hypixel.net/v2/skyblock/bazaar",
+  "/api/bazaar",
   { cache: "no-store" }
 );
     if (!response.ok) {
@@ -1089,4 +1089,3 @@ function renderHuntingShards() {
 }
 
  loadData();
- 
