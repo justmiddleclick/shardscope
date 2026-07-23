@@ -1,25 +1,41 @@
-const HYPIXEL_BAZAAR_URL = "https://api.hypixel.net/v2/skyblock/bazaar";
+const HYPIXEL_BAZAAR_URL =
+  "https://api.hypixel.net/v2/skyblock/bazaar";
 
 export async function onRequestGet() {
   try {
     const response = await fetch(HYPIXEL_BAZAAR_URL, {
       headers: {
-        "User-Agent": "ShardScope/1.0 (Hypixel SkyBlock Bazaar viewer)"
-      },
-      cf: {
-        cacheTtl: 20,
-        cacheEverything: true
+        Accept: "application/json"
       }
     });
 
-    const body = await response.text();
+    const contentType = response.headers.get("content-type") || "";
 
-    return new Response(body, {
-      status: response.status,
+    if (!response.ok) {
+      return Response.json(
+        {
+          success: false,
+          cause: `Hypixel returned status ${response.status}`
+        },
+        { status: 502 }
+      );
+    }
+
+    if (!contentType.includes("application/json")) {
+      return Response.json(
+        {
+          success: false,
+          cause: "Hypixel did not return JSON."
+        },
+        { status: 502 }
+      );
+    }
+
+    const data = await response.json();
+
+    return Response.json(data, {
       headers: {
-        "content-type": response.headers.get("content-type") || "application/json",
-        "cache-control": "public, max-age=20",
-        "access-control-allow-origin": "*"
+        "Cache-Control": "public, max-age=60"
       }
     });
   } catch (error) {
@@ -27,7 +43,10 @@ export async function onRequestGet() {
       {
         success: false,
         cause: "Unable to reach the Hypixel Bazaar API.",
-        detail: error instanceof Error ? error.message : String(error)
+        detail:
+          error instanceof Error
+            ? error.message
+            : String(error)
       },
       { status: 502 }
     );
