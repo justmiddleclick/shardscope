@@ -15,7 +15,10 @@ const shardData = [
 
     fusion: {
       canBeCreatedByFusion: false,
-      ingredients: []
+      ingredients: [],
+      usedIn: [
+        // "SHARD_MOLTHORN"
+      ]
     }
   }
 ];

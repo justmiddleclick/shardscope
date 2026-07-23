@@ -241,6 +241,20 @@ function renderHuntingShards() {
         ${escapeHtml(shard.hunting.difficulty)}
       </span>
     </p>
+    <p>
+  <strong>Used in Fusions:</strong>
+</p>
+
+<ul>
+  ${
+  shard.fusion.usedIn.length
+    ? shard.fusion.usedIn
+        .map(id => `<li>${escapeHtml(titleFromProductId(id))}</li>`)
+        .join("")
+    : "<li>None yet</li>"
+}
+</ul>
+
   </article>
       `;
     })
