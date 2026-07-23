@@ -197,7 +197,7 @@ function renderHuntingShards() {
   }
 
   els.huntingShards.innerHTML = shardData
-    .filter(shard => shard.hunting?.huntable)
+    .filter(() => true)
     .map(shard => {
       const product = state.shards.find(
         bazaarShard => bazaarShard.id === shard.bazaarId
@@ -206,16 +206,30 @@ function renderHuntingShards() {
       const currentValue = product
         ? formatCoins(product.instantSell)
         : "Price unavailable";
+        const recipeHtml = shard.fusion.canBeCreatedByFusion
+  ? `
+    <div class="fusion-recipe">
+      <p><strong>Fusion Recipe:</strong></p>
+      <ul>
+        ${shard.fusion.ingredients
+          .map(ingredient => `
+            <li>
+              ${integer.format(ingredient.amount)} ×
+              ${escapeHtml(ingredient.requirement)}
+            </li>
+          `)
+          .join("")}
+      </ul>
 
-      return `
-  <article class="hunting-shard">
-    <h3>${escapeHtml(shard.name)}</h3>
-
-    <p>
-      <strong>Current Bazaar value:</strong>
-      ${currentValue}
-    </p>
-
+      <p>
+        <strong>Produces:</strong>
+        ${integer.format(shard.fusion.outputAmount)} × ${escapeHtml(shard.name)}
+      </p>
+    </div>
+  `
+  : "";
+  const huntingHtml = shard.hunting.huntable
+  ? `
     <p>
       <strong>Location:</strong>
       <span class="badge badge-location">
@@ -241,21 +255,38 @@ function renderHuntingShards() {
         ${escapeHtml(shard.hunting.difficulty)}
       </span>
     </p>
+  `
+  : `
+    <p><strong>Hunting:</strong> Cannot be hunted directly</p>
+  `;
+
+      return `
+  <article class="hunting-shard">
+    <h3>${escapeHtml(shard.name)}</h3>
+
+    <p>
+      <strong>Current Bazaar value:</strong>
+      ${currentValue}
+    </p>
+
+    ${huntingHtml}
     <p>
   <strong>Used in Fusions:</strong>
 </p>
 
 <ul>
   ${
-  shard.fusion.usedIn.length
-    ? shard.fusion.usedIn
-        .map(id => `<li>${escapeHtml(titleFromProductId(id))}</li>`)
-        .join("")
-    : "<li>None yet</li>"
-}
+    shard.fusion.usedIn.length
+      ? shard.fusion.usedIn
+          .map(id => `<li>${escapeHtml(titleFromProductId(id))}</li>`)
+          .join("")
+      : "<li>None yet</li>"
+  }
 </ul>
 
-  </article>
+${recipeHtml}
+
+</article>
       `;
     })
     .join("");

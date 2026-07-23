@@ -20,5 +20,34 @@ const shardData = [
   "SHARD_HIDEON_GIFT"
 ]
     }
+  },
+    {
+    name: "Hideon Gift",
+    bazaarId: "SHARD_HIDEON_GIFT",
+
+    hunting: {
+      huntable: false,
+      location: null,
+      method: null,
+      tool: null,
+      difficulty: null,
+      estimatedPerHour: null
+    },
+
+    fusion: {
+      canBeCreatedByFusion: true,
+      outputAmount: 2,
+      ingredients: [
+        {
+          requirement: "Any Shulker-family shard",
+          amount: 5
+        },
+        {
+          requirement: "Any COMMON shard",
+          amount: 5
+        }
+      ],
+      usedIn: []
+    }
   }
 ];
