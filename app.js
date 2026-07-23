@@ -166,10 +166,17 @@ function renderHuntingShards() {
     return;
   }
 
-  els.huntingShards.innerHTML = shardData
-    .filter(shard =>
-  shard.name.toLowerCase().includes(els.search.value.trim().toLowerCase())
-)
+  const searchTerm = els.search.value.trim().toLowerCase();
+
+if (!searchTerm) {
+  els.huntingShards.innerHTML = "";
+  return;
+}
+
+els.huntingShards.innerHTML = shardData
+  .filter(shard =>
+    shard.name.toLowerCase().includes(searchTerm)
+  )
     .map(shard => {
       const product = state.shards.find(
         bazaarShard => bazaarShard.id === shard.bazaarId
