@@ -26,7 +26,7 @@ const shardData = [
 
   {
     id: "SHARD_HIDEON_GIFT",
-    name: "Hideon Gift",
+    name: "Hideongift",
     bazaarId: "SHARD_HIDEON_GIFT",
 
     classification: {
