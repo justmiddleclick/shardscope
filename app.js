@@ -1088,4 +1088,5 @@ function renderHuntingShards() {
     matchingShards.length === 0;
 }
 
-// loadData();
+ loadData();
+ 
