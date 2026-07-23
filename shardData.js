@@ -1,7 +1,13 @@
 const shardData = [
   {
+    id: "SHARD_HIDEONLEAF",
     name: "Hideonleaf",
     bazaarId: "SHARD_HIDEONLEAF",
+
+    classification: {
+      family: "Shulker",
+      rarity: null
+    },
 
     hunting: {
       huntable: true,
@@ -14,16 +20,19 @@ const shardData = [
     },
 
     fusion: {
-      canBeCreatedByFusion: false,
-      ingredients: [],
-      usedIn: [
-  "SHARD_HIDEON_GIFT"
-]
+      recipes: []
     }
   },
-    {
+
+  {
+    id: "SHARD_HIDEON_GIFT",
     name: "Hideon Gift",
     bazaarId: "SHARD_HIDEON_GIFT",
+
+    classification: {
+      family: null,
+      rarity: null
+    },
 
     hunting: {
       huntable: false,
@@ -35,19 +44,33 @@ const shardData = [
     },
 
     fusion: {
-      canBeCreatedByFusion: true,
-      outputAmount: 2,
-      ingredients: [
+      recipes: [
         {
-          requirement: "Any Shulker-family shard",
-          amount: 5
-        },
-        {
-          requirement: "Any COMMON shard",
-          amount: 5
+          id: "HIDEON_GIFT_RECIPE_1",
+          name: "Hideon Gift Fusion",
+          outputAmount: 2,
+
+          ingredients: [
+            {
+              type: "group",
+              label: "Any Shulker-family shard",
+              amount: 5,
+
+              options: [
+                "SHARD_HIDEONLEAF"
+              ]
+            },
+
+            {
+              type: "group",
+              label: "Any COMMON shard",
+              amount: 5,
+
+              options: []
+            }
+          ]
         }
-      ],
-      usedIn: []
+      ]
     }
   }
 ];

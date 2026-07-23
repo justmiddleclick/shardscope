@@ -313,7 +313,7 @@ tbody tr:hover { background: rgba(74, 163, 255, .045); }
 
 .bazaar-detail-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -333,6 +333,9 @@ tbody tr:hover { background: rgba(74, 163, 255, .045); }
 
 .bazaar-detail strong {
   display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .bazaar-detail .positive {
@@ -346,5 +349,406 @@ tbody tr:hover { background: rgba(74, 163, 255, .045); }
 @media (max-width: 800px) {
   .bazaar-detail-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Target shard heading */
+
+.target-shard-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.target-shard-heading h3 {
+  margin: 4px 0 0;
+  font-size: clamp(1.6rem, 4vw, 2.3rem);
+}
+
+.target-shard-label {
+  display: block;
+  color: var(--accent-2);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.target-shard-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Acquisition badges */
+
+.acquisition-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 9px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.acquisition-huntable {
+  color: #bbf7d0;
+  background: rgba(21, 128, 61, 0.24);
+  border-color: rgba(74, 222, 128, 0.35);
+}
+
+.acquisition-fusion {
+  color: #bfdbfe;
+  background: rgba(29, 78, 216, 0.24);
+  border-color: rgba(96, 165, 250, 0.35);
+}
+
+.acquisition-unresolved {
+  color: #fde68a;
+  background: rgba(161, 98, 7, 0.24);
+  border-color: rgba(250, 204, 21, 0.35);
+}
+
+/* Fusion section heading */
+
+.fusion-tree-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.fusion-tree-title h4 {
+  margin-bottom: 5px;
+}
+
+.fusion-tree-title p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.fusion-recipe-count {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 5px 10px;
+  border: 1px solid rgba(125, 211, 252, 0.25);
+  border-radius: 999px;
+  background: rgba(74, 163, 255, 0.1);
+  color: var(--accent-2);
+  font-size: 0.76rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* Complete fusion tree */
+
+.fusion-tree {
+  display: grid;
+  gap: 18px;
+}
+
+.fusion-path {
+  overflow: hidden;
+  border: 1px solid rgba(96, 165, 250, 0.28);
+  border-radius: 14px;
+  background: rgba(7, 17, 31, 0.46);
+}
+
+.fusion-path-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 15px 16px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(30, 64, 175, 0.12);
+}
+
+.fusion-path-heading h5 {
+  margin: 3px 0 0;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.fusion-path-label {
+  color: var(--accent-2);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.fusion-output {
+  display: grid;
+  gap: 2px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-align: right;
+}
+
+.fusion-output strong {
+  color: var(--text);
+  font-size: 0.84rem;
+}
+
+.fusion-path-ingredients {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+/* Individual tree nodes */
+
+.fusion-tree-node,
+.fusion-group-node {
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.21);
+  border-radius: 11px;
+  background: rgba(15, 23, 42, 0.62);
+}
+
+.fusion-tree-node summary,
+.fusion-group-node summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 13px 14px;
+  color: var(--text);
+  font-weight: 800;
+  cursor: pointer;
+  list-style: none;
+}
+
+.fusion-tree-node summary::-webkit-details-marker,
+.fusion-group-node summary::-webkit-details-marker {
+  display: none;
+}
+
+.fusion-tree-node summary::before,
+.fusion-group-node summary::before {
+  content: "▶";
+  flex: 0 0 auto;
+  color: var(--accent-2);
+  font-size: 0.68rem;
+  transition: transform 0.16s ease;
+}
+
+.fusion-tree-node[open] > summary::before,
+.fusion-group-node[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.fusion-tree-node summary:hover,
+.fusion-group-node summary:hover {
+  background: rgba(74, 163, 255, 0.06);
+}
+
+.fusion-tree-summary-name {
+  margin-right: auto;
+}
+
+.fusion-tree-summary-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.fusion-tree-node-content {
+  display: grid;
+  gap: 11px;
+  padding: 14px;
+  border-top: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.fusion-tree-price {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px 18px;
+  padding: 10px 12px;
+  border: 1px solid rgba(74, 163, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(74, 163, 255, 0.06);
+  color: #cbd5e1;
+  font-size: 0.82rem;
+}
+
+.fusion-tree-price strong {
+  color: var(--text);
+}
+
+.fusion-tree-price.unavailable {
+  color: var(--muted);
+}
+
+.fusion-tree-hunting {
+  padding: 11px 12px;
+  border-left: 3px solid var(--good);
+  border-radius: 0 8px 8px 0;
+  background: rgba(21, 128, 61, 0.08);
+}
+
+.fusion-tree-hunting p {
+  margin: 4px 0;
+  font-size: 0.84rem;
+}
+
+.fusion-tree-hunting.not-huntable {
+  border-left-color: rgba(148, 163, 184, 0.45);
+  background: rgba(148, 163, 184, 0.06);
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.nested-fusion-section {
+  display: grid;
+  gap: 10px;
+  margin-top: 3px;
+  padding: 12px;
+  border: 1px dashed rgba(96, 165, 250, 0.25);
+  border-radius: 10px;
+  background: rgba(2, 6, 23, 0.25);
+}
+
+.nested-fusion-section h6 {
+  margin: 0;
+  color: var(--accent-2);
+  font-size: 0.8rem;
+}
+
+.nested-fusion-section .fusion-path {
+  margin-left: 12px;
+}
+
+/* Choice-group ingredients */
+
+.fusion-choice-label {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.fusion-group-options {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-top: 1px solid rgba(148, 163, 184, 0.15);
+  border-left: 3px solid rgba(125, 211, 252, 0.45);
+}
+
+.fusion-group-empty {
+  padding: 12px;
+  border: 1px dashed rgba(250, 204, 21, 0.28);
+  border-radius: 8px;
+  background: rgba(161, 98, 7, 0.08);
+}
+
+.fusion-group-empty p {
+  margin: 4px 0;
+  color: #fde68a;
+  font-size: 0.82rem;
+}
+
+.fusion-group-empty code {
+  color: var(--text);
+}
+
+/* Missing data and protection messages */
+
+.fusion-tree-node-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.fusion-tree-missing,
+.fusion-tree-cycle {
+  padding: 13px;
+  border-color: rgba(250, 204, 21, 0.28);
+  background: rgba(161, 98, 7, 0.08);
+}
+
+.fusion-tree-missing p,
+.fusion-tree-cycle p {
+  margin: 8px 0 0;
+  color: #fde68a;
+  font-size: 0.82rem;
+}
+
+.fusion-tree-warning {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(250, 204, 21, 0.25);
+  border-radius: 8px;
+  background: rgba(161, 98, 7, 0.08);
+  color: #fde68a;
+  font-size: 0.82rem;
+}
+
+.fusion-tree-empty {
+  color: var(--muted);
+}
+
+.used-in-list {
+  display: grid;
+  gap: 7px;
+  padding-left: 20px;
+}
+
+.used-in-recipe-name {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+/* Mobile fusion-tree layout */
+
+@media (max-width: 700px) {
+  .target-shard-heading,
+  .fusion-tree-title,
+  .fusion-path-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .target-shard-badges {
+    justify-content: flex-start;
+  }
+
+  .fusion-output {
+    text-align: left;
+  }
+
+  .fusion-tree-node summary,
+  .fusion-group-node summary {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .fusion-tree-summary-badges {
+    width: 100%;
+    justify-content: flex-start;
+    padding-left: 18px;
+  }
+
+  .fusion-choice-label {
+    width: 100%;
+    margin-left: 18px;
+  }
+
+  .nested-fusion-section .fusion-path {
+    margin-left: 0;
   }
 }

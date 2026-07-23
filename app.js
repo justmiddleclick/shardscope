@@ -162,6 +162,725 @@ function escapeHtml(value) {
 });
 
 els.refresh.addEventListener("click", loadData);
+/*
+  Find one shard from shardData.js using its permanent shard ID.
+*/
+function getShardById(shardId) {
+  return shardData.find(shard => shard.id === shardId) || null;
+}
+
+/*
+  Find live Bazaar information for one shard.
+*/
+function getBazaarProductForShard(shard) {
+  if (!shard || !shard.bazaarId) {
+    return null;
+  }
+
+  return (
+    state.shards.find(
+      bazaarShard => bazaarShard.id === shard.bazaarId
+    ) || null
+  );
+}
+
+/*
+  Determine whether a shard has at least one known fusion recipe.
+*/
+function shardHasFusionRecipes(shard) {
+  return Boolean(
+    shard &&
+      shard.fusion &&
+      Array.isArray(shard.fusion.recipes) &&
+      shard.fusion.recipes.length
+  );
+}
+
+/*
+  Create the small Huntable, Fusion, or Unresolved status badges
+  displayed beside shards inside the fusion tree.
+*/
+function renderAcquisitionBadges(shard) {
+  const badges = [];
+
+  if (shard.hunting && shard.hunting.huntable) {
+    badges.push(
+      `<span class="acquisition-badge acquisition-huntable">Huntable</span>`
+    );
+  }
+
+  if (shardHasFusionRecipes(shard)) {
+    badges.push(
+      `<span class="acquisition-badge acquisition-fusion">Fusion</span>`
+    );
+  }
+
+  if (
+    (!shard.hunting || !shard.hunting.huntable) &&
+    !shardHasFusionRecipes(shard)
+  ) {
+    badges.push(
+      `<span class="acquisition-badge acquisition-unresolved">No known route</span>`
+    );
+  }
+
+  return badges.join("");
+}
+
+/*
+  Render a compact Bazaar price box for a shard inside the fusion tree.
+*/
+function renderTreeBazaarInformation(shard) {
+  const product = getBazaarProductForShard(shard);
+
+  if (!product) {
+    return `
+      <div class="fusion-tree-price unavailable">
+        Bazaar information unavailable
+      </div>
+    `;
+  }
+
+  return `
+    <div class="fusion-tree-price">
+      <span>
+        <strong>Instant Buy:</strong>
+        ${formatCoins(product.instantBuy)}
+      </span>
+
+      <span>
+        <strong>Instant Sell:</strong>
+        ${formatCoins(product.instantSell)}
+      </span>
+    </div>
+  `;
+}
+
+/*
+  Render hunting instructions inside an ingredient branch.
+*/
+function renderTreeHuntingInformation(shard) {
+  if (!shard.hunting || !shard.hunting.huntable) {
+    return `
+      <div class="fusion-tree-hunting not-huntable">
+        This shard cannot be hunted directly.
+      </div>
+    `;
+  }
+
+  const location = shard.hunting.location
+    ? escapeHtml(shard.hunting.location)
+    : "Unknown";
+
+  const method = shard.hunting.method
+    ? escapeHtml(shard.hunting.method)
+    : "No hunting instructions have been added yet.";
+
+  const tool = shard.hunting.tool
+    ? escapeHtml(shard.hunting.tool)
+    : "None listed";
+
+  const difficulty = shard.hunting.difficulty
+    ? escapeHtml(shard.hunting.difficulty)
+    : "Unknown";
+
+  return `
+    <div class="fusion-tree-hunting">
+      <p>
+        <strong>Location:</strong>
+        ${location}
+      </p>
+
+      <p>
+        <strong>Method:</strong>
+        ${method}
+      </p>
+
+      <p>
+        <strong>Tool:</strong>
+        ${tool}
+      </p>
+
+      <p>
+        <strong>Difficulty:</strong>
+        ${difficulty}
+      </p>
+    </div>
+  `;
+}
+
+/*
+  Render one specific shard ingredient.
+
+  This function calls itself indirectly through renderFusionRecipesForTree().
+  That is what allows the website to continue through multiple fusion levels.
+*/
+function renderShardIngredientNode(
+  shardId,
+  amount,
+  currentPath = []
+) {
+  const ingredientShard = getShardById(shardId);
+
+  if (!ingredientShard) {
+    return `
+      <div class="fusion-tree-node fusion-tree-missing">
+        <div class="fusion-tree-node-heading">
+          <strong>
+            ${integer.format(amount)} ×
+            ${escapeHtml(titleFromProductId(shardId))}
+          </strong>
+
+          <span class="acquisition-badge acquisition-unresolved">
+            Missing data
+          </span>
+        </div>
+
+        <p>
+          This shard is referenced by a recipe, but it has not been added
+          to shardData.js yet.
+        </p>
+      </div>
+    `;
+  }
+
+  /*
+    Stop the recursion if this shard already appears in the current branch.
+
+    This protects the page if two recipes accidentally point back to
+    each other.
+  */
+  if (currentPath.includes(shardId)) {
+    return `
+      <div class="fusion-tree-node fusion-tree-cycle">
+        <div class="fusion-tree-node-heading">
+          <strong>
+            ${integer.format(amount)} ×
+            ${escapeHtml(ingredientShard.name)}
+          </strong>
+
+          <span class="acquisition-badge acquisition-unresolved">
+            Fusion loop stopped
+          </span>
+        </div>
+
+        <p>
+          This branch points back to a shard that already appeared above it.
+        </p>
+      </div>
+    `;
+  }
+
+  const nextPath = [...currentPath, shardId];
+  const hasRecipes = shardHasFusionRecipes(ingredientShard);
+
+  const nestedFusionHtml = hasRecipes
+    ? `
+      <div class="nested-fusion-section">
+        <h6>Ways to obtain this ingredient through fusion</h6>
+
+        ${renderFusionRecipesForTree(
+          ingredientShard,
+          nextPath
+        )}
+      </div>
+    `
+    : "";
+
+  const deadEndHtml =
+    !ingredientShard.hunting.huntable && !hasRecipes
+      ? `
+        <p class="fusion-tree-warning">
+          No direct hunting method or fusion recipe has been entered
+          for this shard yet.
+        </p>
+      `
+      : "";
+
+  return `
+    <details class="fusion-tree-node" open>
+      <summary>
+        <span class="fusion-tree-summary-name">
+          ${integer.format(amount)} ×
+          ${escapeHtml(ingredientShard.name)}
+        </span>
+
+        <span class="fusion-tree-summary-badges">
+          ${renderAcquisitionBadges(ingredientShard)}
+        </span>
+      </summary>
+
+      <div class="fusion-tree-node-content">
+        ${renderTreeBazaarInformation(ingredientShard)}
+        ${renderTreeHuntingInformation(ingredientShard)}
+        ${nestedFusionHtml}
+        ${deadEndHtml}
+      </div>
+    </details>
+  `;
+}
+
+/*
+  Render an ingredient that represents a category or family.
+
+  Every ID in ingredient.options is shown as a separate possible route.
+*/
+function renderGroupIngredientNode(
+  ingredient,
+  currentPath
+) {
+  const options = Array.isArray(ingredient.options)
+    ? ingredient.options
+    : [];
+
+  const optionHtml = options.length
+    ? options
+        .map(optionShardId =>
+          renderShardIngredientNode(
+            optionShardId,
+            ingredient.amount,
+            currentPath
+          )
+        )
+        .join("")
+    : `
+      <div class="fusion-group-empty">
+        <p>
+          No eligible shards have been entered for this category yet.
+        </p>
+
+        <p>
+          Add their shard IDs to this ingredient's
+          <code>options</code> array in shardData.js.
+        </p>
+      </div>
+    `;
+
+  return `
+    <details class="fusion-group-node" open>
+      <summary>
+        <span>
+          ${integer.format(ingredient.amount)} ×
+          ${escapeHtml(ingredient.label)}
+        </span>
+
+        <span class="fusion-choice-label">
+          Choose one eligible shard
+        </span>
+      </summary>
+
+      <div class="fusion-group-options">
+        ${optionHtml}
+      </div>
+    </details>
+  `;
+}
+
+/*
+  Decide which renderer should handle one recipe ingredient.
+*/
+function renderFusionIngredient(
+  ingredient,
+  currentPath
+) {
+  if (ingredient.type === "shard") {
+    return renderShardIngredientNode(
+      ingredient.shardId,
+      ingredient.amount,
+      currentPath
+    );
+  }
+
+  if (ingredient.type === "group") {
+    return renderGroupIngredientNode(
+      ingredient,
+      currentPath
+    );
+  }
+
+  return `
+    <div class="fusion-tree-node fusion-tree-missing">
+      <p>
+        Unknown ingredient type:
+        ${escapeHtml(ingredient.type || "not provided")}
+      </p>
+    </div>
+  `;
+}
+
+/*
+  Render every fusion recipe for one shard.
+
+  Because recipes is an array, the target shard can have any number
+  of different possible recipes.
+*/
+function renderFusionRecipesForTree(
+  shard,
+  currentPath = []
+) {
+  if (!shardHasFusionRecipes(shard)) {
+    return `
+      <p class="fusion-tree-empty">
+        No fusion recipes have been entered for this shard.
+      </p>
+    `;
+  }
+
+  return shard.fusion.recipes
+    .map((recipe, recipeIndex) => {
+      const recipeName =
+        recipe.name ||
+        `Fusion Recipe ${recipeIndex + 1}`;
+
+      const ingredients = Array.isArray(recipe.ingredients)
+        ? recipe.ingredients
+        : [];
+
+      const ingredientsHtml = ingredients.length
+        ? ingredients
+            .map(ingredient =>
+              renderFusionIngredient(
+                ingredient,
+                currentPath
+              )
+            )
+            .join("")
+        : `
+          <p class="fusion-tree-warning">
+            This recipe does not have any ingredients entered.
+          </p>
+        `;
+
+      return `
+        <article class="fusion-path">
+          <div class="fusion-path-heading">
+            <div>
+              <span class="fusion-path-label">
+                Recipe ${recipeIndex + 1}
+              </span>
+
+              <h5>${escapeHtml(recipeName)}</h5>
+            </div>
+
+            <div class="fusion-output">
+              Produces
+              <strong>
+                ${integer.format(recipe.outputAmount || 1)} ×
+                ${escapeHtml(shard.name)}
+              </strong>
+            </div>
+          </div>
+
+          <div class="fusion-path-ingredients">
+            ${ingredientsHtml}
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+}
+
+/*
+  Find every shard whose recipes reference the current shard.
+
+  This replaces the manually maintained usedIn array.
+*/
+function getRecipesUsingShard(targetShardId) {
+  const results = [];
+
+  shardData.forEach(outputShard => {
+    const recipes =
+      outputShard.fusion &&
+      Array.isArray(outputShard.fusion.recipes)
+        ? outputShard.fusion.recipes
+        : [];
+
+    recipes.forEach((recipe, recipeIndex) => {
+      const ingredients = Array.isArray(recipe.ingredients)
+        ? recipe.ingredients
+        : [];
+
+      const usesTargetShard = ingredients.some(ingredient => {
+        if (
+          ingredient.type === "shard" &&
+          ingredient.shardId === targetShardId
+        ) {
+          return true;
+        }
+
+        if (
+          ingredient.type === "group" &&
+          Array.isArray(ingredient.options) &&
+          ingredient.options.includes(targetShardId)
+        ) {
+          return true;
+        }
+
+        return false;
+      });
+
+      if (usesTargetShard) {
+        results.push({
+          outputShard,
+          recipe,
+          recipeIndex
+        });
+      }
+    });
+  });
+
+  return results;
+}
+
+/*
+  Render the large Bazaar section for the searched target shard.
+
+  This keeps all of your existing Bazaar values.
+*/
+function renderTargetBazaarSection(shard) {
+  const product = getBazaarProductForShard(shard);
+
+  if (!product) {
+    return `
+      <section class="detail-section">
+        <h4>Bazaar</h4>
+        <p>Price information is unavailable.</p>
+      </section>
+    `;
+  }
+
+  const taxRate =
+    Math.max(0, Number(els.tax.value) || 0) / 100;
+
+  const spreadCoins =
+    product.instantBuy - product.instantSell;
+
+  const spreadPercent =
+    product.instantBuy > 0
+      ? (spreadCoins / product.instantBuy) * 100
+      : null;
+
+  const afterTaxSpread =
+    product.instantBuy * (1 - taxRate) -
+    product.instantSell;
+
+  const spreadClass =
+    spreadCoins >= 0 ? "positive" : "negative";
+
+  const afterTaxClass =
+    afterTaxSpread >= 0 ? "positive" : "negative";
+
+  return `
+    <section class="detail-section">
+      <h4>Bazaar</h4>
+
+      <div class="bazaar-detail-grid">
+        <div class="bazaar-detail">
+          <span>Instant Buy</span>
+          <strong>
+            ${formatCoins(product.instantBuy)}
+          </strong>
+        </div>
+
+        <div class="bazaar-detail">
+          <span>Instant Sell</span>
+          <strong>
+            ${formatCoins(product.instantSell)}
+          </strong>
+        </div>
+
+        <div class="bazaar-detail">
+          <span>Spread</span>
+
+          <strong class="${spreadClass}">
+            ${formatCoins(spreadCoins)}
+            ${
+              spreadPercent !== null
+                ? `(${spreadPercent.toFixed(2)}%)`
+                : ""
+            }
+          </strong>
+        </div>
+
+        <div class="bazaar-detail">
+          <span>After-Tax Spread</span>
+
+          <strong class="${afterTaxClass}">
+            ${formatCoins(afterTaxSpread)}
+          </strong>
+        </div>
+
+        <div class="bazaar-detail">
+          <span>Buy Volume</span>
+
+          <strong>
+            ${integer.format(product.buyVolume)}
+          </strong>
+        </div>
+
+        <div class="bazaar-detail">
+          <span>Sell Volume</span>
+
+          <strong>
+            ${integer.format(product.sellVolume)}
+          </strong>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+/*
+  Render the main hunting section for the searched target shard.
+*/
+function renderTargetHuntingSection(shard) {
+  if (!shard.hunting || !shard.hunting.huntable) {
+    return `
+      <section class="detail-section">
+        <h4>Direct Hunting</h4>
+
+        <p>
+          This shard cannot be hunted directly.
+        </p>
+      </section>
+    `;
+  }
+
+  const difficultyClass = shard.hunting.difficulty
+    ? shard.hunting.difficulty.toLowerCase()
+    : "unknown";
+
+  return `
+    <section class="detail-section">
+      <h4>Direct Hunting</h4>
+
+      <p>
+        <strong>Location:</strong>
+
+        <span class="badge badge-location">
+          ${escapeHtml(shard.hunting.location || "Unknown")}
+        </span>
+      </p>
+
+      <p>
+        <strong>Method:</strong>
+        ${escapeHtml(
+          shard.hunting.method ||
+          "No hunting instructions have been added yet."
+        )}
+      </p>
+
+      <p>
+        <strong>Tool:</strong>
+
+        <span class="badge badge-tool">
+          ${escapeHtml(shard.hunting.tool || "None listed")}
+        </span>
+      </p>
+
+      <p>
+        <strong>Difficulty:</strong>
+
+        <span class="badge badge-${escapeHtml(difficultyClass)}">
+          ${escapeHtml(
+            shard.hunting.difficulty || "Unknown"
+          )}
+        </span>
+      </p>
+    </section>
+  `;
+}
+
+/*
+  Render every recipe that uses the searched shard.
+*/
+function renderUsedInSection(shard) {
+  const usedInResults = getRecipesUsingShard(shard.id);
+
+  const usedInHtml = usedInResults.length
+    ? usedInResults
+        .map(result => {
+          const recipeName =
+            result.recipe.name ||
+            `Recipe ${result.recipeIndex + 1}`;
+
+          return `
+            <li>
+              <strong>
+                ${escapeHtml(result.outputShard.name)}
+              </strong>
+
+              <span class="used-in-recipe-name">
+                ${escapeHtml(recipeName)}
+              </span>
+            </li>
+          `;
+        })
+        .join("")
+    : "<li>None currently entered</li>";
+
+  return `
+    <section class="detail-section">
+      <h4>Used in Fusions</h4>
+
+      <ul class="used-in-list">
+        ${usedInHtml}
+      </ul>
+    </section>
+  `;
+}
+
+/*
+  Render all possible known acquisition paths for the searched target.
+*/
+function renderTargetFusionSection(shard) {
+  if (!shardHasFusionRecipes(shard)) {
+    return `
+      <section class="detail-section">
+        <h4>Fusion Paths</h4>
+
+        <p>
+          No fusion recipe has been entered for this shard.
+        </p>
+      </section>
+    `;
+  }
+
+  return `
+    <section class="detail-section fusion-tree-section">
+      <div class="fusion-tree-title">
+        <div>
+          <h4>All Known Fusion Paths</h4>
+
+          <p>
+            Expand each branch to follow the recipe until it reaches
+            directly huntable shards.
+          </p>
+        </div>
+
+        <span class="fusion-recipe-count">
+          ${integer.format(shard.fusion.recipes.length)}
+          ${
+            shard.fusion.recipes.length === 1
+              ? "recipe"
+              : "recipes"
+          }
+        </span>
+      </div>
+
+      <div class="fusion-tree">
+        ${renderFusionRecipesForTree(
+          shard,
+          [shard.id]
+        )}
+      </div>
+    </section>
+  `;
+}
+
+/*
+  Render the searched shard's complete detail card.
+*/
 function renderHuntingShards() {
   if (
     !els.huntingShards ||
@@ -171,7 +890,8 @@ function renderHuntingShards() {
     return;
   }
 
-  const searchTerm = els.search.value.trim().toLowerCase();
+  const searchTerm =
+    els.search.value.trim().toLowerCase();
 
   if (!searchTerm) {
     els.huntingShards.innerHTML = "";
@@ -179,194 +899,45 @@ function renderHuntingShards() {
     return;
   }
 
-  const matchingShards = shardData.filter(shard =>
-    shard.name.toLowerCase().includes(searchTerm)
-  );
+  const matchingShards = shardData.filter(shard => {
+    const nameMatches =
+      shard.name.toLowerCase().includes(searchTerm);
+
+    const idMatches =
+      shard.id.toLowerCase().includes(searchTerm);
+
+    return nameMatches || idMatches;
+  });
 
   els.huntingShards.innerHTML = matchingShards
     .map(shard => {
-      const product = state.shards.find(
-        bazaarShard => bazaarShard.id === shard.bazaarId
-      );
-
-      const taxRate = Number(els.tax.value) / 100;
-
-      const spreadCoins = product
-        ? product.instantBuy - product.instantSell
-        : null;
-
-      const spreadPercent =
-        product && product.instantBuy > 0
-          ? (spreadCoins / product.instantBuy) * 100
-          : null;
-
-      const afterTaxSpread = product
-        ? product.instantBuy * (1 - taxRate) - product.instantSell
-        : null;
-
-      const spreadClass =
-        spreadCoins !== null && spreadCoins > 0
-          ? "positive"
-          : "negative";
-
-      const afterTaxClass =
-        afterTaxSpread !== null && afterTaxSpread > 0
-          ? "positive"
-          : "negative";
-
-      const bazaarHtml = product
-        ? `
-          <section class="detail-section">
-            <h4>Bazaar</h4>
-
-            <div class="bazaar-detail-grid">
-              <div class="bazaar-detail">
-                <span>Instant Buy</span>
-                <strong>${formatCoins(product.instantBuy)}</strong>
-              </div>
-
-              <div class="bazaar-detail">
-                <span>Instant Sell</span>
-                <strong>${formatCoins(product.instantSell)}</strong>
-              </div>
-
-              <div class="bazaar-detail">
-                <span>Spread</span>
-                <strong class="${spreadClass}">
-                  ${formatCoins(spreadCoins)}
-                  ${
-                    spreadPercent !== null
-                      ? `(${spreadPercent.toFixed(2)}%)`
-                      : ""
-                  }
-                </strong>
-              </div>
-
-              <div class="bazaar-detail">
-                <span>After-Tax Spread</span>
-                <strong class="${afterTaxClass}">
-                  ${formatCoins(afterTaxSpread)}
-                </strong>
-              </div>
-
-              <div class="bazaar-detail">
-                <span>Buy Volume</span>
-                <strong>${integer.format(product.buyVolume)}</strong>
-              </div>
-
-              <div class="bazaar-detail">
-                <span>Sell Volume</span>
-                <strong>${integer.format(product.sellVolume)}</strong>
-              </div>
-            </div>
-          </section>
-        `
-        : `
-          <section class="detail-section">
-            <h4>Bazaar</h4>
-            <p>Price information is unavailable.</p>
-          </section>
-        `;
-
-      const huntingHtml = shard.hunting.huntable
-        ? `
-          <section class="detail-section">
-            <h4>Hunting</h4>
-
-            <p>
-              <strong>Location:</strong>
-              <span class="badge badge-location">
-                ${escapeHtml(shard.hunting.location)}
-              </span>
-            </p>
-
-            <p>
-              <strong>Method:</strong>
-              ${escapeHtml(shard.hunting.method)}
-            </p>
-
-            <p>
-              <strong>Tool:</strong>
-              <span class="badge badge-tool">
-                ${escapeHtml(shard.hunting.tool)}
-              </span>
-            </p>
-
-            <p>
-              <strong>Difficulty:</strong>
-              <span class="badge badge-${shard.hunting.difficulty.toLowerCase()}">
-                ${escapeHtml(shard.hunting.difficulty)}
-              </span>
-            </p>
-          </section>
-        `
-        : `
-          <section class="detail-section">
-            <h4>Hunting</h4>
-            <p>Cannot be hunted directly.</p>
-          </section>
-        `;
-
-      const usedInHtml = `
-        <section class="detail-section">
-          <h4>Used in Fusions</h4>
-
-          <ul>
-            ${
-              shard.fusion.usedIn.length
-                ? shard.fusion.usedIn
-                    .map(
-                      id =>
-                        `<li>${escapeHtml(titleFromProductId(id))}</li>`
-                    )
-                    .join("")
-                : "<li>None yet</li>"
-            }
-          </ul>
-        </section>
-      `;
-
-      const recipeHtml = shard.fusion.canBeCreatedByFusion
-        ? `
-          <section class="detail-section fusion-recipe">
-            <h4>Fusion Recipe</h4>
-
-            <ul>
-              ${shard.fusion.ingredients
-                .map(
-                  ingredient => `
-                    <li>
-                      ${integer.format(ingredient.amount)} ×
-                      ${escapeHtml(ingredient.requirement)}
-                    </li>
-                  `
-                )
-                .join("")}
-            </ul>
-
-            <p>
-              <strong>Produces:</strong>
-              ${integer.format(shard.fusion.outputAmount)} ×
-              ${escapeHtml(shard.name)}
-            </p>
-          </section>
-        `
-        : "";
-
       return `
         <article class="hunting-shard">
-          <h3>${escapeHtml(shard.name)}</h3>
+          <div class="target-shard-heading">
+            <div>
+              <span class="target-shard-label">
+                Target Shard
+              </span>
 
-          ${bazaarHtml}
-          ${huntingHtml}
-          ${usedInHtml}
-          ${recipeHtml}
+              <h3>${escapeHtml(shard.name)}</h3>
+            </div>
+
+            <div class="target-shard-badges">
+              ${renderAcquisitionBadges(shard)}
+            </div>
+          </div>
+
+          ${renderTargetBazaarSection(shard)}
+          ${renderTargetHuntingSection(shard)}
+          ${renderUsedInSection(shard)}
+          ${renderTargetFusionSection(shard)}
         </article>
       `;
     })
     .join("");
 
-  els.shardDetailsSection.hidden = matchingShards.length === 0;
+  els.shardDetailsSection.hidden =
+    matchingShards.length === 0;
 }
 
 loadData();
