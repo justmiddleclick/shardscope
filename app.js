@@ -1089,3 +1089,39 @@ function renderHuntingShards() {
 }
 
  loadData();
+window.exportShardTemplate = function () {
+    const template = state.shards
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map(product => {
+            const permanentId = product.name
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "");
+
+            return {
+                id: permanentId,
+                name: product.name,
+                bazaarId: product.id,
+
+                classification: {
+                    family: "",
+                    rarity: ""
+                },
+
+                hunting: {
+                    huntable: false,
+                    location: "",
+                    method: "",
+                    tool: "",
+                    difficulty: ""
+                },
+
+                fusion: {
+                    recipes: []
+                }
+            };
+        });
+
+    console.log(JSON.stringify(template, null, 4));
+
+    return template;
+};
