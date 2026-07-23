@@ -80,12 +80,18 @@ function filteredShards() {
   const minVolume = Math.max(0, Number(els.minVolume.value) || 0);
   const sortKey = els.sort.value;
 
+  if (!query) {
+    return [];
+  }
+
   return state.shards
     .filter(shard => {
-      const matchesSearch = !query ||
+      const matchesSearch =
         shard.name.toLowerCase().includes(query) ||
         shard.id.toLowerCase().includes(query);
+
       const totalVolume = shard.buyVolume + shard.sellVolume;
+
       return matchesSearch && totalVolume >= minVolume;
     })
     .sort((a, b) => (b[sortKey] || 0) - (a[sortKey] || 0));
@@ -113,6 +119,9 @@ function render() {
 
   els.resultCount.textContent = `${integer.format(shards.length)} results`;
   els.empty.classList.toggle("hidden", shards.length > 0);
+  els.empty.textContent = els.search.value.trim()
+  ? "No shards match your search."
+  : "Start typing a shard name to view its Bazaar information.";
 
   els.rows.innerHTML = shards.map(shard => {
     const afterTaxSpread = shard.instantBuy * (1 - taxRate) - shard.instantSell;
