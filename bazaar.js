@@ -15,8 +15,8 @@ function normalizeProducts(products) {
   return Object.entries(products)
     .filter(([id]) => id.startsWith("SHARD_"))
     .map(([id, product]) => {
-      const instantBuy = firstPrice(product.sell_summary);
-      const instantSell = firstPrice(product.buy_summary);
+      const instantBuy = firstPrice(product.buy_summary);
+      const instantSell = firstPrice(product.sell_summary);
       const spreadCoins = instantBuy - instantSell;
       const spreadPercent = instantSell > 0 ? (spreadCoins / instantSell) * 100 : 0;
 
