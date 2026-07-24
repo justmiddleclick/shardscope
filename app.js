@@ -1,5 +1,10 @@
 const state = {
   shards: [],
+    /*
+    Fast lookup for live Bazaar products by product ID.
+  */
+  bazaarById: new Map(),
+
   lastUpdated: null,
 
   /*
@@ -19,6 +24,14 @@ const state = {
   acquisitionCalculator: null
 };
 
+/*
+  Fast lookup for permanent shard data by shard ID.
+
+  shardData is loaded from shardData.js before app.js runs.
+*/
+const shardById = new Map(
+  shardData.map(shard => [shard.id, shard])
+);
 /*
   Build or rebuild the acquisition calculator using the current
   shard database and live Bazaar prices.
@@ -77,8 +90,10 @@ const els = {
   tax: document.querySelector("#tax"),
   refresh: document.querySelector("#refresh"),
   tracked: document.querySelector("#tracked"),
-  highestSell: document.querySelector("#highestSell"),
-  bestSpread: document.querySelector("#bestSpread"),
+bestFusion: document.querySelector("#bestFusion"),
+mostExpensive: document.querySelector("#mostExpensive"),
+mostProfitableFlip: document.querySelector("#mostProfitableFlip"),
+mostActive: document.querySelector("#mostActive"),
   resultCount: document.querySelector("#resultCount"),
   rows: document.querySelector("#rows"),
   empty: document.querySelector("#empty"),
@@ -121,6 +136,14 @@ async function loadData() {
     }
 
     state.shards = normalizeProducts(payload.products);
+
+/*
+  Rebuild the Bazaar product lookup whenever prices refresh.
+*/
+state.bazaarById = new Map(
+  state.shards.map(product => [product.id, product])
+);
+
 state.lastUpdated =
   Number(payload.lastUpdated) || Date.now();
 
@@ -135,13 +158,23 @@ initializeAcquisitionCalculator();
 
     render();
   } catch (error) {
-    console.error(error);
-    els.status.className = "status error";
-    els.status.textContent = "Could not load prices";
-    els.updated.textContent = error.message;
-    els.rows.innerHTML = "";
-    els.empty.classList.remove("hidden");
-    els.empty.textContent = "The Bazaar feed is unavailable right now. Try refreshing in a moment.";
+  console.error(error);
+
+  state.shards = [];
+  state.bazaarById.clear();
+  state.acquisitionCalculator = null;
+
+  els.status.className = "status error";
+  els.status.textContent = "Could not load prices";
+  els.updated.textContent = error.message;
+
+  els.rows.innerHTML = "";
+  els.huntingShards.innerHTML = "";
+  els.shardDetailsSection.hidden = true;
+
+  els.empty.classList.remove("hidden");
+  els.empty.textContent =
+    "The Bazaar feed is unavailable right now. Try refreshing in a moment.";
   } finally {
     els.refresh.disabled = false;
   }
@@ -173,12 +206,60 @@ function render() {
   const taxRate = Math.max(0, Number(els.tax.value) || 0) / 100;
   const shards = filteredShards();
 
-  els.tracked.textContent = integer.format(state.shards.length);
+  els.tracked.textContent =
+  integer.format(state.shards.length);
 
-  const highestSell = [...state.shards].sort((a, b) => b.instantSell - a.instantSell)[0];
-  els.highestSell.textContent = highestSell
-    ? `${highestSell.name} · ${formatCoins(highestSell.instantSell)}`
-    : "—";
+/*
+  Highest current instant-buy price.
+*/
+const mostExpensive = [...state.shards]
+  .sort((a, b) => b.instantBuy - a.instantBuy)[0];
+
+els.mostExpensive.textContent = mostExpensive
+  ? `${mostExpensive.name} · ${formatCoins(mostExpensive.instantBuy)}`
+  : "—";
+
+/*
+  Best listed Bazaar flip after tax.
+*/
+const spreads = state.shards
+  .map(shard => ({
+    ...shard,
+
+    afterTaxSpread:
+      shard.instantBuy * (1 - taxRate) -
+      shard.instantSell
+  }))
+  .sort(
+    (a, b) =>
+      b.afterTaxSpread -
+      a.afterTaxSpread
+  );
+
+els.mostProfitableFlip.textContent = spreads[0]
+  ? `${spreads[0].name} · ${formatCoins(spreads[0].afterTaxSpread)}`
+  : "—";
+
+/*
+  Highest combined buy and sell volume.
+*/
+const mostActive = [...state.shards]
+  .map(shard => ({
+    ...shard,
+
+    totalVolume:
+      shard.buyVolume +
+      shard.sellVolume
+  }))
+  .sort(
+    (a, b) =>
+      b.totalVolume -
+      a.totalVolume
+  )[0];
+
+els.mostActive.textContent = mostActive
+  ? `${mostActive.name} · ${integer.format(mostActive.totalVolume)}`
+  : "—";
 
   const spreads = state.shards.map(shard => ({
     ...shard,
@@ -225,19 +306,17 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-["input", "change"].forEach(eventName => {
-  els.search.addEventListener(eventName, render);
-  els.minVolume.addEventListener(eventName, render);
-  els.tax.addEventListener(eventName, render);
-  els.sort.addEventListener(eventName, render);
-});
+els.search.addEventListener("input", render);
+els.minVolume.addEventListener("input", render);
+els.tax.addEventListener("input", render);
+els.sort.addEventListener("change", render);
 
 els.refresh.addEventListener("click", loadData);
 /*
   Find one shard from shardData.js using its permanent shard ID.
 */
 function getShardById(shardId) {
-  return shardData.find(shard => shard.id === shardId) || null;
+  return shardById.get(shardId) || null;
 }
 
 /*
@@ -248,11 +327,7 @@ function getBazaarProductForShard(shard) {
     return null;
   }
 
-  return (
-    state.shards.find(
-      bazaarShard => bazaarShard.id === shard.bazaarId
-    ) || null
-  );
+  return state.bazaarById.get(shard.bazaarId) || null;
 }
 
 /*
@@ -1330,7 +1405,7 @@ const matchingShards = shardData.filter(shard => {
 
  loadData();
 window.exportShardTemplate = function () {
-    const template = state.shards
+    const template = [...state.shards]
         .sort((a, b) => a.name.localeCompare(b.name))
         .map(product => {
             const permanentId = product.name

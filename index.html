@@ -9,64 +9,121 @@
 </head>
 <body>
   <header class="hero">
-    <div class="wrap">
-      <p class="eyebrow">HYPIXEL SKYBLOCK TOOL</p>
-      <h1>ShardScope</h1>
-      <p class="subtitle">Find the highest-value shards and the best Bazaar spreads using live prices.</p>
-      <div class="status-row">
-        <span id="status" class="status">Loading Bazaar data…</span>
-        <span id="updated" class="updated"></span>
-      </div>
+  <div class="wrap hero-content">
+    <h1>ShardScope</h1>
+
+    <div class="status-row">
+      <span id="status" class="status">
+        Loading Bazaar data…
+      </span>
+
+      <span id="updated" class="updated"></span>
     </div>
-  </header>
+  </div>
+</header>
 
   <main class="wrap">
-    <section class="controls card" aria-label="Filters">
-      <label>
-        Search
-        <input id="search" type="search" placeholder="Daemon, Hideonring…">
-      </label>
+    <section class="search-panel card" aria-label="Shard search and filters">
+  <div class="primary-search">
+    <label for="search">Search for a shard</label>
 
-      <label>
-        Sort by
-        <select id="sort">
-          <option value="instantBuy">Highest instant-buy price</option>
-          <option value="instantSell">Highest instant-sell price</option>
-          <option value="spreadCoins">Largest spread</option>
-          <option value="spreadPercent">Largest spread %</option>
-          <option value="sellVolume">Highest sell volume</option>
-          <option value="buyVolume">Highest buy volume</option>
-        </select>
-      </label>
+    <div class="search-input-wrap">
+      <span class="search-icon" aria-hidden="true">⌕</span>
 
-      <label>
-        Minimum daily volume
-        <input id="minVolume" type="number" min="0" step="1" value="0">
-      </label>
+      <input
+        id="search"
+        type="search"
+        placeholder="Search Daemon, Hideonring, Starborn..."
+        autocomplete="off"
+      >
+    </div>
+  </div>
 
-      <label>
-        Bazaar tax %
-        <input id="tax" type="number" min="0" max="10" step="0.1" value="1.25">
-      </label>
+  <div class="filter-row">
+    <label>
+      Sort by
 
-      <button id="refresh" type="button">Refresh prices</button>
-    </section>
+      <select id="sort">
+        <option value="instantBuy">Highest instant-buy price</option>
+        <option value="instantSell">Highest instant-sell price</option>
+        <option value="spreadCoins">Largest spread</option>
+        <option value="spreadPercent">Largest spread %</option>
+        <option value="sellVolume">Highest sell volume</option>
+        <option value="buyVolume">Highest buy volume</option>
+      </select>
+    </label>
 
-    <section class="summary-grid" aria-label="Summary">
-      <article class="card metric">
-        <span>Tracked shards</span>
-        <strong id="tracked">—</strong>
-      </article>
-      <article class="card metric">
-        <span>Highest instant sell</span>
-        <strong id="highestSell">—</strong>
-      </article>
-      <article class="card metric">
-        <span>Best listed spread</span>
-        <strong id="bestSpread">—</strong>
-      </article>
-    </section>
+    <label>
+      Minimum daily volume
 
+      <input
+        id="minVolume"
+        type="number"
+        min="0"
+        step="1"
+        value="0"
+      >
+    </label>
+
+    <label>
+      Bazaar tax %
+
+      <input
+        id="tax"
+        type="number"
+        min="0"
+        max="10"
+        step="0.1"
+        value="1.25"
+      >
+    </label>
+
+    <button id="refresh" type="button">
+      Refresh prices
+    </button>
+  </div>
+</section>
+
+    <section class="dashboard-section" aria-label="Bazaar overview">
+  <div class="dashboard-heading">
+    <div>
+      <span class="section-kicker">Live market overview</span>
+      <h2>Bazaar highlights</h2>
+    </div>
+
+    <div class="tracked-pill">
+      <span>Tracked</span>
+      <strong id="tracked">—</strong>
+      <span>shards</span>
+    </div>
+  </div>
+
+  <div class="summary-grid">
+    <article class="card metric">
+      <span class="metric-label">Today's best fusion</span>
+      <strong id="bestFusion">Coming soon</strong>
+      <small>Highest estimated fusion profit</small>
+    </article>
+
+    <article class="card metric">
+      <span class="metric-label">Most expensive shard</span>
+      <strong id="mostExpensive">—</strong>
+      <small>Highest instant-buy price</small>
+    </article>
+
+    <article class="card metric">
+      <span class="metric-label">Most profitable flip</span>
+      <strong id="mostProfitableFlip">—</strong>
+      <small>Best after-tax listed spread</small>
+    </article>
+
+    <article class="card metric">
+      <span class="metric-label">Most active shard</span>
+      <strong id="mostActive">—</strong>
+      <small>Highest combined volume</small>
+    </article>
+  </div>
+</section>
     <section class="card table-card">
       <div class="table-heading">
         <div>

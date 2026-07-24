@@ -118,7 +118,7 @@ class ShardAcquisitionCalculator {
         ? Number(product.instantSell)
         : Number(product.instantBuy);
 
-    if (!Number.isFinite(price) || price < 0) {
+    if (!Number.isFinite(price) || price <= 0) {
       return null;
     }
 
@@ -261,7 +261,7 @@ class ShardAcquisitionCalculator {
         recipe.name ||
         `Fusion Recipe ${recipeIndex + 1}`,
 
-      totalCost: unitCost,
+      totalCost: batchCost,
       unitCost,
 
       /*
