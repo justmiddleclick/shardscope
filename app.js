@@ -1,8 +1,73 @@
 const state = {
   shards: [],
-  lastUpdated: null
+  lastUpdated: null,
+
+  /*
+    Pricing used by the acquisition calculator.
+
+    instantBuy:
+      Purchase immediately from existing sell offers.
+
+    buyOrder:
+      Estimate the cost of filling a Bazaar buy order.
+  */
+  acquisitionPriceMode: "instantBuy",
+
+  /*
+    Created after live Bazaar prices finish loading.
+  */
+  acquisitionCalculator: null
 };
 
+/*
+  Build or rebuild the acquisition calculator using the current
+  shard database and live Bazaar prices.
+*/
+function initializeAcquisitionCalculator() {
+  if (
+    typeof window.ShardAcquisitionCalculator !== "function"
+  ) {
+    console.error(
+      "ShardAcquisitionCalculator did not load. Check the script order in index.html."
+    );
+
+    state.acquisitionCalculator = null;
+    return;
+  }
+
+  if (
+    !Array.isArray(shardData) ||
+    !Array.isArray(state.shards)
+  ) {
+    state.acquisitionCalculator = null;
+    return;
+  }
+
+  state.acquisitionCalculator =
+    new window.ShardAcquisitionCalculator({
+      shards: shardData,
+      bazaarProducts: state.shards,
+      priceMode: state.acquisitionPriceMode
+    });
+
+  console.log(
+    "Acquisition calculator ready:",
+    {
+      priceMode:
+        state.acquisitionCalculator.priceMode,
+
+      shardCount:
+        shardData.length,
+
+      calculatedResults:
+        state.acquisitionCalculator.bestResults.size,
+
+      unstableShards: [
+        ...state.acquisitionCalculator.unstableShardIds
+      ]
+    }
+  );
+}
 const els = {
   status: document.querySelector("#status"),
   updated: document.querySelector("#updated"),
@@ -56,7 +121,13 @@ async function loadData() {
     }
 
     state.shards = normalizeProducts(payload.products);
-    state.lastUpdated = Number(payload.lastUpdated) || Date.now();
+state.lastUpdated =
+  Number(payload.lastUpdated) || Date.now();
+
+/*
+  Recalculate acquisition paths whenever live Bazaar prices refresh.
+*/
+initializeAcquisitionCalculator();
 
     els.status.className = "status success";
     els.status.textContent = "Live Bazaar data loaded";
